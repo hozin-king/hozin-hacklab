@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- HackLab icon palette. Kept in sync with the in-app dark theme. -->
+    <color name="hacklab_bg">#0F1115</color>
+    <color name="hacklab_green">#00C853</color>
+</resources>
