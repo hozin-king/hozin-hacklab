@@ -28,6 +28,11 @@ private fun file(content: String): VNode.File {
  * One step: short lessons, one mission, one hint, and a predicate that
  * decides — from the terminal session alone — whether the mission is done.
  * A step is never marked finished unless its predicate is really true.
+ *
+ * `focus` is the step's command in one glance, shown on the mission board.
+ * `video` is the companion video for the step. When `fallback` is true the
+ * video is a general beginner terminal video, not one made for this exact
+ * command — the UI says so honestly instead of pretending otherwise.
  */
 data class StepDef(
     val index: Int,
@@ -35,7 +40,18 @@ data class StepDef(
     val lessons: List<String>,
     val mission: String,
     val hint: String,
+    val focus: String,
+    val video: VideoMeta,
     val check: (TerminalEngine) -> Boolean
+)
+
+/** A YouTube video shown inside the app's own player screen. */
+data class VideoMeta(
+    val videoId: String,
+    val title: String,
+    val channel: String,
+    val language: String,
+    val fallback: Boolean
 )
 
 object Steps {
@@ -91,6 +107,14 @@ object Steps {
             ),
             mission = "Jalankan pwd dan whoami.",
             hint = "Ketik pwd, tekan Kirim, lalu ketik whoami.",
+            focus = "pwd · whoami",
+            video = VideoMeta(
+                videoId = "QDPjHYbo5o4",
+                title = "Tutorial Termux, Mengenal perintah date, whoami, tree, Dan pwd",
+                channel = "PHPB Channel",
+                language = "Bahasa Indonesia",
+                fallback = false
+            ),
             check = { engine ->
                 engine.ran.contains("pwd") && engine.ran.contains("whoami")
             }
@@ -107,6 +131,14 @@ object Steps {
             ),
             mission = "Jalankan ls saat berada di folder home.",
             hint = "Kamu sudah di home. Ketik saja ls.",
+            focus = "ls",
+            video = VideoMeta(
+                videoId = "369gvyaPg2Y",
+                title = "Belajar Terminal Linux #1 - Memahami perintah ls & sub perintahnya (Pendalaman Perintah ls)",
+                channel = "COMPie ID",
+                language = "Bahasa Indonesia",
+                fallback = false
+            ),
             check = { engine ->
                 engine.lsDirs.contains(HOME_DIR)
             }
@@ -122,6 +154,14 @@ object Steps {
             ),
             mission = "Pindah ke folder dokumen (akhiri di dalam folder dokumen).",
             hint = "Ketik cd dokumen.",
+            focus = "cd dokumen",
+            video = VideoMeta(
+                videoId = "tsSOe0NlydU",
+                title = "Belajar Terminal Linux #2 - Memahami perintah cd & sub perintahnya (Pendalaman Perintah cd)",
+                channel = "COMPie ID",
+                language = "Bahasa Indonesia",
+                fallback = false
+            ),
             check = { engine ->
                 engine.cwd == "$HOME_DIR/dokumen"
             }
@@ -138,6 +178,14 @@ object Steps {
             ),
             mission = "Baca file catatan.txt di dalam folder dokumen.",
             hint = "Pastikan kamu di folder dokumen dulu, lalu ketik cat catatan.txt.",
+            focus = "cat catatan.txt",
+            video = VideoMeta(
+                videoId = "bliC-hD4Irg",
+                title = "##15 Perintah \"cat\" - Belajar Command Line Kelas 2",
+                channel = "COMPie ID",
+                language = "Bahasa Indonesia",
+                fallback = false
+            ),
             check = { engine ->
                 engine.readFiles.contains("$HOME_DIR/dokumen/catatan.txt")
             }
@@ -154,6 +202,14 @@ object Steps {
             ),
             mission = "Jalankan help, lalu clear.",
             hint = "Ketik help dulu, setelah itu ketik clear.",
+            focus = "help → clear",
+            video = VideoMeta(
+                videoId = "D4xq6ndzyZ8",
+                title = "Perintah Dasar Sistem Operasi Linux date, cal, man, clear, apropos, whatis",
+                channel = "Nuri Cahyono",
+                language = "Bahasa Indonesia",
+                fallback = false
+            ),
             check = { engine ->
                 // True when a "clear" runs at any point after a "help".
                 // (First-occurrence index comparison would be wrong if the
@@ -180,6 +236,14 @@ object Steps {
             ),
             mission = "Baca file brankas/flag.txt.",
             hint = "Dari home, ketik cd brankas, lalu cat flag.txt.",
+            focus = "cd brankas · cat flag.txt",
+            video = VideoMeta(
+                videoId = "AsEmHX_5Nb0",
+                title = "Belajar Linux Dasar untuk Hacker: Penjelasan Pakai Bahasa Bayi!",
+                channel = "Recoon",
+                language = "Bahasa Indonesia",
+                fallback = true
+            ),
             check = { engine ->
                 engine.readFiles.contains("$HOME_DIR/brankas/flag.txt")
             }

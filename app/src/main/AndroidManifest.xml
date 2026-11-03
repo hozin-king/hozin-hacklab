@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  HackLab manifest. Deliberately permission-free: no INTERNET, no storage,
-  nothing else. Everything runs offline inside this app; the terminal is a
-  simulation and never touches the real filesystem or a real shell.
+  HackLab manifest. Exactly one permission: INTERNET, needed only for
+  streaming the companion YouTube videos in VideoPlayerActivity. The
+  lessons and the terminal simulator stay fully offline and never touch
+  the real filesystem or a real shell.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.hozinking.hacklab">
+
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:label="HackLab"
@@ -27,6 +30,9 @@
             android:name=".TerminalActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".VideoPlayerActivity"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

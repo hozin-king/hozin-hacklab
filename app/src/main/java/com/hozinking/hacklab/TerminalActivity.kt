@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
@@ -43,6 +45,24 @@ class TerminalActivity : Activity() {
     private lateinit var completionButton: Button
     private var completionShown = false
 
+    // Blinking block cursor after the pending prompt. The blink only ever
+    // touches the very last character of the log, and it is always stripped
+    // before new text is appended, so it can never corrupt a command line.
+    private val cursorHandler = Handler(Looper.getMainLooper())
+    private var cursorVisible = false
+    private val cursorRunnable = object : Runnable {
+        override fun run() {
+            if (cursorVisible) {
+                stripCursor()
+            } else {
+                logSpans.append("█")
+                cursorVisible = true
+                logView.text = logSpans
+            }
+            cursorHandler.postDelayed(this, 530)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val index = intent.getIntExtra(EXTRA_STEP_INDEX, 0)
@@ -61,20 +81,27 @@ class TerminalActivity : Activity() {
         }
         setContentView(root)
 
-        // Mission banner: exactly one sentence, always visible.
-        val missionCard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Ui.CARD)
-            setPadding(Ui.dp(this, 12), Ui.dp(this, 12), Ui.dp(this, 12), Ui.dp(this, 12))
+        // Mission strip: one line, always visible. The terminal below it
+        // is the hero of this screen and takes all remaining space.
+        val missionStrip = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
         }
-        missionCard.addView(Ui.small(this, "MISI"))
-        missionCard.addView(Ui.body(this, step.mission))
-        root.addView(missionCard)
+        missionStrip.addView(Ui.mono(this, "MISI ${index + 1}/06", 13f, Ui.ACCENT).apply {
+            setTypeface(null, Typeface.BOLD)
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            params.rightMargin = Ui.dp(this, 8)
+            layoutParams = params
+        })
+        missionStrip.addView(Ui.body(this, step.mission))
+        root.addView(missionStrip)
 
-        // Scrollable log.
+        // Scrollable log: the terminal itself.
         logView = TextView(this).apply {
             typeface = Typeface.MONOSPACE
-            textSize = 14f
+            textSize = 15f
             setTextColor(Ui.TEXT)
             setBackgroundColor(Ui.CARD)
             setPadding(Ui.dp(this, 12), Ui.dp(this, 12), Ui.dp(this, 12), Ui.dp(this, 12))
@@ -182,12 +209,44 @@ class TerminalActivity : Activity() {
         appendLine("Ketik help untuk melihat perintah.")
         printPrompt()
         scrollToBottom()
+        startCursorBlink()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        startCursorBlink()
+    }
+
+    override fun onPause() {
+        stopCursorBlink()
+        super.onPause()
+    }
+
+    private fun startCursorBlink() {
+        stripCursor()
+        cursorHandler.removeCallbacks(cursorRunnable)
+        cursorHandler.postDelayed(cursorRunnable, 530)
+    }
+
+    private fun stopCursorBlink() {
+        cursorHandler.removeCallbacks(cursorRunnable)
+        stripCursor()
+    }
+
+    private fun stripCursor() {
+        if (!cursorVisible) return
+        if (logSpans.length > 0 && logSpans[logSpans.length - 1] == '█') {
+            logSpans.delete(logSpans.length - 1, logSpans.length)
+            logView.text = logSpans
+        }
+        cursorVisible = false
     }
 
     private fun sendCommand() {
         val raw = input.text.toString()
         if (raw.trim().isEmpty()) return
         input.setText("")
+        stripCursor()
         // The prompt line is already printed; the command completes it.
         logSpans.append(raw.trim()).append("\n")
         when (val result = engine.execute(raw)) {
@@ -208,6 +267,7 @@ class TerminalActivity : Activity() {
 
     private fun showHint() {
         // Close the pending prompt line, print the hint, open a new prompt.
+        stripCursor()
         logSpans.append("\n")
         logSpans.append("Petunjuk: ${step.hint}\n")
         logView.text = logSpans
