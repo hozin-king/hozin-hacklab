@@ -41,7 +41,7 @@ class MainActivity : Activity() {
             setPadding(0, 0, 0, Ui.dp(this, 2))
         })
         root.addView(Ui.title(this, "HackLab"))
-        root.addView(Ui.small(this, "Lab terminal di HP. Materi dan simulator sepenuhnya offline — hanya streaming video yang memakai internet.").apply {
+        root.addView(Ui.small(this, "Lab terminal di HP. Materi dan simulator sepenuhnya offline — hanya video dan situs game Fase 2 yang memakai internet.").apply {
             setPadding(0, Ui.dp(this, 4), 0, Ui.dp(this, 20))
         })
 
@@ -62,6 +62,38 @@ class MainActivity : Activity() {
         board.addView(boardNodes)
         root.addView(board)
 
+        // Fase 2: belajar ngoding lewat game. Bukan misi berurutan —
+        // semua game terbuka, tanpa kunci dan tanpa progres.
+        val gamesBoard = Ui.panel(this).apply {
+            setPadding(Ui.dp(this, 16), Ui.dp(this, 16), Ui.dp(this, 16), Ui.dp(this, 16))
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            params.topMargin = Ui.dp(this, 16)
+            layoutParams = params
+        }
+        gamesBoard.addView(Ui.label(this, "FASE 2 — BELAJAR NGODING LEWAT GAME").apply {
+            setPadding(0, 0, 0, Ui.dp(this, 8))
+        })
+        gamesBoard.addView(Ui.small(this, "Lima game yang melatihmu menulis kode sambil bermain. Situs game butuh internet — Fase 1 tetap sepenuhnya offline.").apply {
+            setPadding(0, 0, 0, Ui.dp(this, 12))
+        })
+        for (i in 0 until Games.COUNT) {
+            val game = Games.get(i) ?: continue
+            val node = Ui.missionNode(this, Ui.NodeStatus.ACTIVE, "[${i + 1}]", game.name, game.tagline, "${game.language} · ${game.level}").apply {
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                if (i > 0) params.topMargin = Ui.dp(this, 8)
+                layoutParams = params
+                setOnClickListener { openGame(i) }
+            }
+            gamesBoard.addView(node)
+        }
+        root.addView(gamesBoard)
+
         // The one primary action.
         actionButton = Ui.primaryButton(this, "").apply {
             val params = LinearLayout.LayoutParams(
@@ -74,7 +106,7 @@ class MainActivity : Activity() {
         }
         root.addView(actionButton)
 
-        root.addView(Ui.small(this, "Semua progres tersimpan di HP ini. Tidak ada akun, tidak ada data yang dikirim — kecuali streaming video dari YouTube saat kamu memutarnya.").apply {
+        root.addView(Ui.small(this, "Semua progres tersimpan di HP ini. Tidak ada akun, tidak ada data yang dikirim — kecuali streaming video dari YouTube saat kamu memutarnya dan saat kamu membuka situs game di Fase 2.").apply {
             setPadding(0, Ui.dp(this, 20), 0, 0)
         })
     }
@@ -124,6 +156,12 @@ class MainActivity : Activity() {
             completed < Steps.COUNT -> "Lanjutkan"
             else -> "Lihat langkah terakhir"
         }
+    }
+
+    private fun openGame(index: Int) {
+        startActivity(Intent(this, GameActivity::class.java).apply {
+            putExtra(GameActivity.EXTRA_GAME_INDEX, index)
+        })
     }
 
     private fun openActiveStep() {
