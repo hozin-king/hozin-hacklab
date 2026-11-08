@@ -3,6 +3,7 @@ package com.hozinking.hacklab
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
+import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
@@ -164,6 +165,65 @@ object Ui {
             setPadding(0, Ui.dp(this, 2), 0, 0)
         })
         textCol.addView(small(context, note).apply {
+            setPadding(0, Ui.dp(this, 2), 0, 0)
+        })
+        row.addView(textCol)
+        return row
+    }
+
+    // One Play Store-style row: a colored icon tile on the left, the
+    // lesson name (bold), one tagline line and one meta line on the
+    // right. The row itself is just a view; the caller attaches the
+    // tap behavior.
+    fun gameRow(
+        context: Context,
+        iconText: String,
+        iconColorHex: String,
+        name: String,
+        tagline: String,
+        meta: String
+    ): LinearLayout {
+        val tileColor = try {
+            Color.parseColor(iconColorHex)
+        } catch (e: Exception) {
+            Color.parseColor("#455A64")
+        }
+        val row = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setBackgroundColor(BG)
+            setPadding(0, Ui.dp(this, 8), 0, Ui.dp(this, 8))
+        }
+        row.addView(TextView(context).apply {
+            text = iconText
+            textSize = 18f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(TEXT)
+            setBackgroundColor(tileColor)
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                Ui.dp(this, 56),
+                Ui.dp(this, 56)
+            )
+        })
+        val textCol = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(Ui.dp(this, 12), 0, 0, 0)
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        }
+        textCol.addView(TextView(context).apply {
+            text = name
+            textSize = 16f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(TEXT)
+        })
+        textCol.addView(small(context, tagline).apply {
+            setPadding(0, Ui.dp(this, 2), 0, 0)
+        })
+        textCol.addView(small(context, meta).apply {
             setPadding(0, Ui.dp(this, 2), 0, 0)
         })
         row.addView(textCol)

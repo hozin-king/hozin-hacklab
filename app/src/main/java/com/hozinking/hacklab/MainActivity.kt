@@ -2,6 +2,7 @@ package com.hozinking.hacklab
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.LinearLayout
@@ -21,6 +22,7 @@ class MainActivity : Activity() {
 
     private lateinit var store: ProgressStore
     private lateinit var boardNodes: LinearLayout
+    private lateinit var gamesContainer: LinearLayout
     private lateinit var progressLine: android.widget.TextView
     private lateinit var actionButton: Button
 
@@ -41,7 +43,7 @@ class MainActivity : Activity() {
             setPadding(0, 0, 0, Ui.dp(this, 2))
         })
         root.addView(Ui.title(this, "HackLab"))
-        root.addView(Ui.small(this, "Lab terminal di HP. Materi dan simulator sepenuhnya offline — hanya video dan situs game Fase 2 yang memakai internet.").apply {
+        root.addView(Ui.small(this, "Lab terminal di HP. Materi dan simulator sepenuhnya offline — hanya video dan sinkronisasi katalog yang memakai internet.").apply {
             setPadding(0, Ui.dp(this, 4), 0, Ui.dp(this, 20))
         })
 
@@ -62,8 +64,8 @@ class MainActivity : Activity() {
         board.addView(boardNodes)
         root.addView(board)
 
-        // Fase 2: belajar ngoding lewat game. Bukan misi berurutan —
-        // semua game terbuka, tanpa kunci dan tanpa progres.
+        // Fase 2: mini-game offline. Bukan misi berurutan — semua game
+        // terbuka, tanpa kunci. Daftar gaya Play Store: ikon + nama.
         val gamesBoard = Ui.panel(this).apply {
             setPadding(Ui.dp(this, 16), Ui.dp(this, 16), Ui.dp(this, 16), Ui.dp(this, 16))
             val params = LinearLayout.LayoutParams(
@@ -76,23 +78,18 @@ class MainActivity : Activity() {
         gamesBoard.addView(Ui.label(this, "FASE 2 — BELAJAR NGODING LEWAT GAME").apply {
             setPadding(0, 0, 0, Ui.dp(this, 8))
         })
-        gamesBoard.addView(Ui.small(this, "Lima game yang melatihmu menulis kode sambil bermain. Situs game butuh internet — Fase 1 tetap sepenuhnya offline.").apply {
+        gamesBoard.addView(Ui.small(this, "Mini-game offline yang melatihmu menulis kode sambil bermain. Pelajaran baru bisa ditambah lewat katalog online — Fase 1 tetap sepenuhnya offline.").apply {
             setPadding(0, 0, 0, Ui.dp(this, 12))
         })
-        for (i in 0 until Games.COUNT) {
-            val game = Games.get(i) ?: continue
-            val node = Ui.missionNode(this, Ui.NodeStatus.ACTIVE, "[${i + 1}]", game.name, game.tagline, "${game.language} · ${game.level}").apply {
-                val params = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-                if (i > 0) params.topMargin = Ui.dp(this, 8)
-                layoutParams = params
-                setOnClickListener { openGame(i) }
-            }
-            gamesBoard.addView(node)
+        gamesContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
         }
+        gamesBoard.addView(gamesContainer)
         root.addView(gamesBoard)
+        refreshGames()
+        // Sync the online catalog quietly; new lessons appear when the
+        // fetch succeeds, nothing changes when it does not.
+        LessonCatalog.sync(this) { refreshGames() }
 
         // The one primary action.
         actionButton = Ui.primaryButton(this, "").apply {
@@ -106,7 +103,7 @@ class MainActivity : Activity() {
         }
         root.addView(actionButton)
 
-        root.addView(Ui.small(this, "Semua progres tersimpan di HP ini. Tidak ada akun, tidak ada data yang dikirim — kecuali streaming video dari YouTube saat kamu memutarnya dan saat kamu membuka situs game di Fase 2.").apply {
+        root.addView(Ui.small(this, "Semua progres tersimpan di HP ini. Tidak ada akun, tidak ada data yang dikirim — kecuali streaming video dari YouTube saat kamu memutarnya dan saat katalog pelajaran disinkronkan.").apply {
             setPadding(0, Ui.dp(this, 20), 0, 0)
         })
     }
@@ -114,6 +111,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         refresh()
+        refreshGames()
     }
 
     private fun refresh() {
@@ -158,9 +156,34 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun openGame(index: Int) {
+    // The catalog parse + merge runs on a background thread; only the
+    // row building touches views on the main thread. Guarded against a
+    // callback landing after the activity is gone.
+    private fun refreshGames() {
+        LessonCatalog.loadMergedAsync(this) { entries ->
+            if (isFinishing || isDestroyed) return@loadMergedAsync
+            gamesContainer.removeAllViews()
+            for (entry in entries) {
+                val row = Ui.gameRow(
+                    this, entry.icon, entry.color, entry.name, entry.tagline,
+                    "${entry.language} · ${entry.level}"
+                ).apply {
+                    setOnClickListener {
+                        if (entry.kind == "minigame") {
+                            openGame(entry.id)
+                        } else {
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(entry.url)))
+                        }
+                    }
+                }
+                gamesContainer.addView(row)
+            }
+        }
+    }
+
+    private fun openGame(lessonId: String) {
         startActivity(Intent(this, GameActivity::class.java).apply {
-            putExtra(GameActivity.EXTRA_GAME_INDEX, index)
+            putExtra(GameActivity.EXTRA_LESSON_ID, lessonId)
         })
     }
 

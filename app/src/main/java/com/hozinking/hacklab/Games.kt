@@ -5,11 +5,13 @@ package com.hozinking.hacklab
  *
  * Lima game dari video Rayden "5 game bikin jago ngoding & hacking"
  * (92 detik, ditranskrip 4 Nov 2026). Bukan misi berurutan seperti
- * Fase 1 — semua game terbuka, tanpa kunci dan tanpa progres.
- * Game-game ini dimainkan di situs resminya lewat browser dan butuh
- * internet; Fase 1 tetap sepenuhnya offline.
+ * Fase 1 — semua game terbuka, tanpa kunci. Sejak v1.3 tiap game
+ * adalah mini-game offline yang bisa dimainkan di dalam aplikasi
+ * (lihat MiniGameLevels); tombol situs resmi tetap ada sebagai
+ * pelengkap, bukan satu-satunya jalan main.
  *
- * URL situs resmi diverifikasi (HTTP 200) sebelum ditulis di sini.
+ * icon adalah 2 huruf untuk tile di daftar ala Play Store, color
+ * warna tile itu. id dipakai katalog online untuk menambah level.
  */
 data class GameDef(
     val index: Int,
@@ -19,7 +21,10 @@ data class GameDef(
     val skills: String,
     val language: String,
     val level: String,
-    val url: String
+    val url: String,
+    val id: String,
+    val icon: String,
+    val color: String
 )
 
 object Games {
@@ -44,7 +49,10 @@ object Games {
                 "dan pemecahan masalah selangkah demi selangkah.",
             language = "Python / JavaScript",
             level = "Pemula",
-            url = "https://codecombat.com"
+            url = "https://codecombat.com",
+            id = "code-combat",
+            icon = "CC",
+            color = "#00C853"
         ),
         GameDef(
             index = 1,
@@ -62,7 +70,10 @@ object Games {
                 "dan berpikir sistem.",
             language = "JavaScript",
             level = "Menengah",
-            url = "https://bitburner.com"
+            url = "https://bitburner.com",
+            id = "bitburner",
+            icon = "BB",
+            color = "#7C4DFF"
         ),
         GameDef(
             index = 2,
@@ -79,7 +90,10 @@ object Games {
                 "dan latihan banyak bahasa pemrograman.",
             language = "Banyak bahasa",
             level = "Pemula – Menengah",
-            url = "https://www.codingame.com"
+            url = "https://www.codingame.com",
+            id = "codingame",
+            icon = "CG",
+            color = "#2962FF"
         ),
         GameDef(
             index = 3,
@@ -97,7 +111,10 @@ object Games {
                 "serta strategi jangka panjang.",
             language = "JavaScript",
             level = "Lanjutan",
-            url = "https://screeps.com"
+            url = "https://screeps.com",
+            id = "screeps",
+            icon = "SC",
+            color = "#FF6D00"
         ),
         GameDef(
             index = 4,
@@ -114,7 +131,10 @@ object Games {
             skills = "Logika algoritma, otomatisasi, dan optimasi.",
             language = "Logika visual (tanpa kode)",
             level = "Menengah",
-            url = "https://www.zachtronics.com/opus-magnum/"
+            url = "https://www.zachtronics.com/opus-magnum/",
+            id = "opus-magnum",
+            icon = "OM",
+            color = "#C51162"
         )
     )
 
