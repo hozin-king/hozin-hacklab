@@ -40,6 +40,13 @@
         <activity
             android:name=".MiniGameActivity"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".LabActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".LabSimulatorActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>

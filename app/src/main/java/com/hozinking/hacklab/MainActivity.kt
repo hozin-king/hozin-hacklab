@@ -23,6 +23,8 @@ class MainActivity : Activity() {
     private lateinit var store: ProgressStore
     private lateinit var boardNodes: LinearLayout
     private lateinit var gamesContainer: LinearLayout
+    private lateinit var labsContainer: LinearLayout
+    private lateinit var labsProgressLine: android.widget.TextView
     private lateinit var progressLine: android.widget.TextView
     private lateinit var actionButton: Button
 
@@ -91,6 +93,35 @@ class MainActivity : Activity() {
         // fetch succeeds, nothing changes when it does not.
         LessonCatalog.sync(this) { refreshGames() }
 
+        // Fase 3: lab keamanan. Semua lab terbuka, tanpa kunci — seperti
+        // Fase 2. Semua simulasi offline melawan target palsu.
+        val labStore = LabStore(this)
+        val labsBoard = Ui.panel(this).apply {
+            setPadding(Ui.dp(this, 16), Ui.dp(this, 16), Ui.dp(this, 16), Ui.dp(this, 16))
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            params.topMargin = Ui.dp(this, 16)
+            layoutParams = params
+        }
+        labsBoard.addView(Ui.label(this, "FASE 3 — LAB KEAMANAN").apply {
+            setPadding(0, 0, 0, Ui.dp(this, 8))
+        })
+        labsBoard.addView(Ui.small(this, "Tujuh lab simulasi offline: XSS, CSS injection, SQL injection, WiFi deauther, DDoS, hack server, dan hack crypto. Semua target palsu di dalam aplikasi — tidak ada trafik nyata.").apply {
+            setPadding(0, 0, 0, Ui.dp(this, 12))
+        })
+        labsProgressLine = Ui.mono(this, "", 13f, Ui.ACCENT).apply {
+            setPadding(0, 0, 0, Ui.dp(this, 12))
+        }
+        labsBoard.addView(labsProgressLine)
+        labsContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        labsBoard.addView(labsContainer)
+        root.addView(labsBoard)
+        refreshLabs()
+
         // The one primary action.
         actionButton = Ui.primaryButton(this, "").apply {
             val params = LinearLayout.LayoutParams(
@@ -112,6 +143,7 @@ class MainActivity : Activity() {
         super.onResume()
         refresh()
         refreshGames()
+        refreshLabs()
     }
 
     private fun refresh() {
@@ -184,6 +216,30 @@ class MainActivity : Activity() {
     private fun openGame(lessonId: String) {
         startActivity(Intent(this, GameActivity::class.java).apply {
             putExtra(GameActivity.EXTRA_LESSON_ID, lessonId)
+        })
+    }
+
+    private fun refreshLabs() {
+        if (!::labsContainer.isInitialized || !::labsProgressLine.isInitialized) return
+        val store = LabStore(this)
+        val ids = Labs.ALL.map { it.id }
+        labsProgressLine.text = "${store.doneCount(ids)}/${Labs.COUNT} LAB SELESAI"
+        labsContainer.removeAllViews()
+        for (lab in Labs.ALL) {
+            val done = store.isLabDone(lab.id)
+            val row = Ui.gameRow(
+                this, lab.icon, lab.color, lab.name, lab.tagline,
+                "Lab keamanan · " + if (done) "Selesai" else "Belum selesai"
+            ).apply {
+                setOnClickListener { openLab(lab.index) }
+            }
+            labsContainer.addView(row)
+        }
+    }
+
+    private fun openLab(index: Int) {
+        startActivity(Intent(this, LabActivity::class.java).apply {
+            putExtra(LabActivity.EXTRA_LAB_INDEX, index)
         })
     }
 
