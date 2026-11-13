@@ -13,9 +13,28 @@ android {
         versionName "1.4"
     }
 
+    // Keystore debug PERSISTEN (di repo root, di-.gitignore, TIDAK
+    // pernah ter-push): sertifikat build tidak berubah tiap run CI.
+    // Config ini HANYA dibuat bila file keystore ada (AGP memvalidasi
+    // file-nya di CI — config yang menunjuk file yang tidak ada
+    // membuat CI merah).
+    signingConfigs {
+        if (file("../debug.keystore").exists()) {
+            debug {
+                storeFile file("../debug.keystore")
+                storePassword "android"
+                keyAlias "androiddebugkey"
+                keyPassword "android"
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            if (file("../debug.keystore").exists()) {
+                signingConfig signingConfigs.debug
+            }
         }
     }
 
